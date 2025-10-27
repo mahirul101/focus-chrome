@@ -14,20 +14,13 @@ A Chrome extension that helps you maintain focus while studying using the Pomodo
 
 ## Installation
 
-1. **Download the Extension Files**
-   - Save all the following files in a folder (e.g., `focusbrowse`):
-     - `manifest.json`
-     - `popup.html`
-     - `popup.js`
-     - `background.js`
-     - `content.js`
-     - `content.css`
+1. **Clone the Github Repository in your local computer**
 
 2. **Load in Chrome**
    - Open Chrome and go to `chrome://extensions/`
    - Enable "Developer mode" (toggle in top-right corner)
    - Click "Load unpacked"
-   - Select your `focusbrowse` folder
+   - Select the folder where the cloned repository is situated in
    - The extension should now appear in your extensions list!
 
 ## Usage
@@ -42,18 +35,6 @@ A Chrome extension that helps you maintain focus while studying using the Pomodo
 3. Click "Add" to add each site to your focus list
 4. **Add as many sites as you need** - just keep adding them one by one
 5. Remove sites by clicking the "Remove" button next to them
-
-**Example Focus List:**
-- `docs.google.com` (for Google Docs)
-- `notion.so` (for Notion notes)
-- `stackoverflow.com` (for coding help)
-- `github.com` (for repositories)
-- `coursera.org` (for online courses)
-
-**How Domain Matching Works:**
-- **`google.com`** → Matches `google.com`, `docs.google.com`, `drive.google.com`, `mail.google.com`, etc.
-- **`docs.google.com`** → Matches ONLY `docs.google.com` and its subdomains (like `api.docs.google.com`)
-- **Be as specific or broad as you want!**
 
 ### Starting a Focus Session
 
@@ -82,16 +63,6 @@ A Chrome extension that helps you maintain focus while studying using the Pomodo
 - Click the extension icon
 - Click "Stop" to end your current session
 - All warnings and effects will be removed immediately
-
-## Tips for Best Results
-
-1. **Choose Your Specificity**: 
-   - Add `google.com` if you need ALL Google services
-   - Add `docs.google.com` if you only need Google Docs
-   - Be as specific or broad as your study needs require
-2. **Keep Focus List Relevant**: Add only the sites you genuinely need for your current study session
-3. **Honor the Breaks**: Taking breaks is essential for maintaining long-term focus
-4. **Use Consistently**: The Pomodoro Technique works best when used regularly
 
 ---
 
