@@ -11,7 +11,17 @@ let coffeeMug = null;
 
 // Create warning bar for non-focus tabs
 function createWarningBar() {
-  if (warningBar) return;
+  // Don't recreate if it already exists
+  if (warningBar && document.body.contains(warningBar)) {
+    // Just update the class if needed
+    const isBreak = currentState.isBreak;
+    if (isBreak && !warningBar.classList.contains('break-time')) {
+      warningBar.classList.add('break-time');
+    } else if (!isBreak && warningBar.classList.contains('break-time')) {
+      warningBar.classList.remove('break-time');
+    }
+    return;
+  }
 
   const isBreak = currentState.isBreak;
   const icon = isBreak ? '☕' : '⚠️';
@@ -44,7 +54,10 @@ function removeWarningBar() {
 
 // Create coffee mug indicator
 function createCoffeeMug() {
-  if (coffeeMug) return;
+  // Don't recreate if it already exists
+  if (coffeeMug && document.body.contains(coffeeMug)) {
+    return;
+  }
 
   // Wait for body to be ready
   if (!document.body) {
@@ -128,8 +141,6 @@ function createCoffeeMug() {
 
   coffeeMug.appendChild(svg);
   document.body.appendChild(coffeeMug);
-
-  console.log('FocusBrowse: Coffee mug created');
 }
 
 // Remove coffee mug
@@ -169,6 +180,8 @@ function removeDimEffect() {
 
 // Update page based on focus state
 function updatePageState() {
+  console.log('FocusBrowse: Updating page state', currentState);
+
   if (currentState.focusMode) {
     // Always show coffee mug during focus mode (both focus and break time)
     createCoffeeMug();
@@ -185,7 +198,7 @@ function updatePageState() {
         createWarningBar();
         applyDimEffect();
       } else {
-        // If IS a focused site, remove warning and dim
+        // If IS a focused site, NO warning and NO dim
         removeWarningBar();
         removeDimEffect();
       }
@@ -215,21 +228,12 @@ async function checkCurrentUrl() {
         totalTime: response.totalTime
       };
 
-      console.log('FocusBrowse State:', currentState); // Debug log
       updatePageState();
     }
   } catch (e) {
-    console.error('FocusBrowse Error:', e);
+    console.error('FocusBrowse Error:');
   }
 }
-
-// Listen for messages from background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'updateState') {
-    console.log('FocusBrowse: Received update'); // Debug log
-    checkCurrentUrl();
-  }
-});
 
 // Initialize
 if (document.readyState === 'loading') {

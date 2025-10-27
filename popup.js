@@ -9,12 +9,26 @@ let state = {
 
 // Load state from storage
 async function loadState() {
-  const data = await chrome.storage.local.get(['state']);
-  if (data.state) {
-    state = { ...state, ...data.state };
+  try {
+    if (!chrome.storage || !chrome.storage.local) {
+      throw new Error('Chrome storage API not available');
+    }
+
+    const data = await chrome.storage.local.get(['state', 'focusUrls']);
+    if (data.state) {
+      state = { ...state, ...data.state };
+    }
+    if (data.focusUrls) {
+      state.focusUrls = data.focusUrls;
+    }
+    console.log('Popup: Loaded state', state);
+    updateUI();
+    await loadFocusUrls();
+  } catch (error) {
+    console.error('Popup: Error loading state:', error);
+    updateUI(); // Still update UI even if loading fails
+    await loadFocusUrls(); // Still try to load URLs
   }
-  updateUI();
-  loadFocusUrls();
 }
 
 // Save state to storage
@@ -53,31 +67,54 @@ function updateUI() {
 
 // Load and display focus URLs
 async function loadFocusUrls() {
-  const data = await chrome.storage.local.get(['focusUrls']);
-  state.focusUrls = data.focusUrls || [];
+  try {
+    const data = await chrome.storage.local.get(['focusUrls']);
+    state.focusUrls = data.focusUrls || [];
 
-  const list = document.getElementById('focusList');
-  list.innerHTML = '';
+    const list = document.getElementById('focusList');
+    if (!list) {
+      console.error('Popup: Focus list element not found');
+      return;
+    }
 
-  state.focusUrls.forEach((url, index) => {
-    const item = document.createElement('div');
-    item.className = 'focus-item';
-    item.innerHTML = `
-      <span title="${url}">${url}</span>
-      <button class="remove-btn" data-index="${index}">Remove</button>
-    `;
-    list.appendChild(item);
-  });
+    list.innerHTML = '';
 
-  // Add event listeners for remove buttons
-  document.querySelectorAll('.remove-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const index = parseInt(e.target.dataset.index);
-      state.focusUrls.splice(index, 1);
-      await chrome.storage.local.set({ focusUrls: state.focusUrls });
-      loadFocusUrls();
+    if (state.focusUrls.length === 0) {
+      return;
+    }
+
+    state.focusUrls.forEach((url, index) => {
+      const item = document.createElement('div');
+      item.className = 'focus-item';
+      item.innerHTML = `
+        <span title="${url}">${url}</span>
+        <button class="remove-btn" data-index="${index}">Remove</button>
+      `;
+      list.appendChild(item);
     });
-  });
+
+    // Add event listeners for remove buttons
+    document.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const index = parseInt(e.target.dataset.index);
+        state.focusUrls.splice(index, 1);
+        // Save to storage
+        await chrome.storage.local.set({ focusUrls: state.focusUrls });
+
+        // Notify background script to reload URLs
+        try {
+          await chrome.runtime.sendMessage({ action: 'reloadUrls' });
+        } catch (error) {
+          console.error('Popup: Error notifying background script:', error);
+        }
+
+        // Reload display
+        await loadFocusUrls();
+      });
+    });
+  } catch (error) {
+    console.error('Popup: Error loading focus URLs:', error);
+  }
 }
 
 // Add URL to focus list
@@ -96,10 +133,26 @@ document.getElementById('addUrl').addEventListener('click', async () => {
       .trim();
 
     if (url && !state.focusUrls.includes(url)) {
+      console.log('Popup: Adding URL:', url);
       state.focusUrls.push(url);
+
+      // Save to storage
       await chrome.storage.local.set({ focusUrls: state.focusUrls });
+
+      // Clear input
       input.value = '';
-      loadFocusUrls();
+
+      // Notify background script to reload URLs
+      try {
+        await chrome.runtime.sendMessage({ action: 'reloadUrls' });
+      } catch (error) {
+        console.error('Popup: Error notifying background script:', error);
+      }
+
+      // Reload display
+      await loadFocusUrls();
+    } else if (state.focusUrls.includes(url)) {
+      input.value = '';
     }
   }
 });
@@ -148,15 +201,51 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-// Initialize
-loadState();
-
 // Update UI every second while popup is open
 setInterval(() => {
-  chrome.runtime.sendMessage({ action: 'getState' }, (response) => {
-    if (response) {
-      state = { ...state, ...response };
+  if (chrome.runtime && chrome.runtime.sendMessage) {
+    chrome.runtime.sendMessage({ action: 'getState' }, (response) => {
+      if (response) {
+        state = { ...state, ...response };
+        updateUI();
+      }
+    });
+  }
+}, 1000);
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('Popup: DOM loaded, initializing...');
+  try {
+    if (chrome.storage && chrome.storage.local) {
+      await loadState();
+    } else {
+      console.error('Popup: Chrome storage API not available');
+      updateUI(); // Still show UI even if storage fails
+    }
+  } catch (error) {
+    console.error('Popup: Initialization error:', error);
+    updateUI(); // Still show UI even if initialization fails
+  }
+});
+
+// Fallback initialization (in case DOMContentLoaded already fired)
+if (document.readyState === 'loading') {
+  // DOM hasn't loaded yet
+} else {
+  // DOM is already loaded
+  console.log('Popup: DOM already loaded, initializing...');
+  setTimeout(async () => {
+    try {
+      if (chrome.storage && chrome.storage.local) {
+        await loadState();
+      } else {
+        console.error('Popup: Chrome storage API not available');
+        updateUI();
+      }
+    } catch (error) {
+      console.error('Popup: Fallback initialization error:', error);
       updateUI();
     }
-  });
-}, 1000);
+  }, 100);
+}

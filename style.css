@@ -1,4 +1,0 @@
-/* Optional: dimming effect */
-body.dimmed {
-  filter: blur(6px) brightness(0.5);
-}
