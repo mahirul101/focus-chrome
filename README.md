@@ -23,16 +23,7 @@ A Chrome extension that helps you maintain focus while studying using the Pomodo
      - `content.js`
      - `content.css`
 
-2. **Create Icons Folder**
-   - Create a folder named `icons` inside your extension folder
-   - Add three icon files (you can create simple icons or use placeholders):
-     - `icon16.png` (16x16 pixels)
-     - `icon48.png` (48x48 pixels)
-     - `icon128.png` (128x128 pixels)
-   
-   **Quick Icon Creation**: You can use any image editor or online tool to create a simple coffee mug icon in these three sizes. Alternatively, use a solid color square as a placeholder.
-
-3. **Load in Chrome**
+2. **Load in Chrome**
    - Open Chrome and go to `chrome://extensions/`
    - Enable "Developer mode" (toggle in top-right corner)
    - Click "Load unpacked"
@@ -101,53 +92,6 @@ A Chrome extension that helps you maintain focus while studying using the Pomodo
 2. **Keep Focus List Relevant**: Add only the sites you genuinely need for your current study session
 3. **Honor the Breaks**: Taking breaks is essential for maintaining long-term focus
 4. **Use Consistently**: The Pomodoro Technique works best when used regularly
-
-## File Structure
-
-```
-focusbrowse/
-├── manifest.json          # Extension configuration
-├── popup.html            # Extension popup interface
-├── popup.js              # Popup logic and UI handling
-├── background.js         # Timer logic and state management
-├── content.js            # Page modification script
-├── content.css           # Styles for warnings and coffee mug
-├── icons/
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── README.md
-```
-
-## Troubleshooting
-
-**Extension not loading?**
-- Make sure all files are in the correct locations
-- Check that you have the `icons` folder with all three icon files
-- Try reloading the extension from `chrome://extensions/`
-
-**Timer not working?**
-- Refresh the page after starting focus mode
-- Check that you've granted necessary permissions
-
-**Sites not being recognized?**
-- The extension respects your specificity:
-  - `google.com` matches ALL Google services
-  - `docs.google.com` matches ONLY Google Docs
-- Make sure you've entered just the domain without `https://`, `www.`, or any paths
-- Try being more specific (add subdomain) or more broad (remove subdomain) based on your needs
-
-**Coffee mug not appearing?**
-- Refresh the page after starting focus mode
-- Some special pages (like `chrome://` URLs) won't show the coffee mug
-
-## Privacy
-
-This extension stores all data locally on your device. No information is sent to external servers.
-
-## Support
-
-For issues or feature requests, feel free to modify the code to suit your needs!
 
 ---
 
