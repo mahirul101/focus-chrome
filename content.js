@@ -165,7 +165,81 @@ function updateCoffeeMug() {
   if (fill) {
     fill.setAttribute('height', fillHeight);
     fill.setAttribute('y', 33 + maxHeight - fillHeight);
+
+    // Remove existing progress classes
+    fill.classList.remove('quarter-full', 'half-full', 'three-quarter-full', 'nearly-full');
+
+    // Add appropriate progress class for visual effects
+    if (progress >= 0.9) {
+      fill.classList.add('nearly-full');
+    } else if (progress >= 0.75) {
+      fill.classList.add('three-quarter-full');
+    } else if (progress >= 0.5) {
+      fill.classList.add('half-full');
+    } else if (progress >= 0.25) {
+      fill.classList.add('quarter-full');
+    }
+
+    // Add visual feedback for progress milestones
+    const percentComplete = Math.round(progress * 100);
+    const timeFormatted = formatTime(currentState.timeRemaining);
+    const totalTimeFormatted = formatTime(currentState.totalTime);
+
+    coffeeMug.title = `Study Progress: ${percentComplete}% complete\n${timeFormatted} / ${totalTimeFormatted} remaining`;
+
+    // Add color changes as mug fills up (progressive darkening)
+    if (progress < 0.25) {
+      fill.setAttribute('fill', '#D2B48C'); // Tan
+    } else if (progress < 0.5) {
+      fill.setAttribute('fill', '#CD853F'); // Peru
+    } else if (progress < 0.75) {
+      fill.setAttribute('fill', '#8B4513'); // Saddle brown
+    } else if (progress < 0.9) {
+      fill.setAttribute('fill', '#654321'); // Dark brown
+    } else {
+      fill.setAttribute('fill', '#2F1B14'); // Very dark brown - almost done!
+    }
+
+    // Add bubbles/foam effect when nearly full
+    if (progress > 0.85) {
+      const foam = coffeeMug.querySelector('.foam') || createFoamEffect();
+      if (foam) {
+        foam.style.opacity = Math.min(0.9, (progress - 0.85) / 0.15);
+      }
+    } else {
+      const foam = coffeeMug.querySelector('.foam');
+      if (foam) {
+        foam.style.opacity = '0';
+      }
+    }
   }
+}
+
+// Create foam effect for nearly full mug
+function createFoamEffect() {
+  if (!coffeeMug) return null;
+
+  const svg = coffeeMug.querySelector('.mug-svg');
+  if (!svg) return null;
+
+  const foam = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  foam.setAttribute('class', 'foam');
+  foam.setAttribute('cx', '45');
+  foam.setAttribute('cy', '36');
+  foam.setAttribute('rx', '20');
+  foam.setAttribute('ry', '3');
+  foam.setAttribute('fill', '#F5F5DC');
+  foam.setAttribute('opacity', '0');
+
+  svg.appendChild(foam);
+  return foam;
+}
+
+// Format time for display
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 // Apply dim effect to page
@@ -220,20 +294,46 @@ async function checkCurrentUrl() {
     });
 
     if (response) {
-      currentState = {
-        focusMode: response.focusMode,
-        isFocused: response.isFocused,
-        isBreak: response.isBreak,
-        timeRemaining: response.timeRemaining,
-        totalTime: response.totalTime
-      };
-
-      updatePageState();
+      updateState(response);
     }
   } catch (e) {
-    console.error('FocusBrowse Error:');
+    console.error('FocusBrowse Error:', e);
   }
 }
+
+// Update state and UI
+function updateState(newState) {
+  const wasInFocus = currentState.focusMode;
+  const previousTimeRemaining = currentState.timeRemaining;
+
+  currentState = {
+    focusMode: newState.focusMode,
+    isFocused: newState.isFocused,
+    isBreak: newState.isBreak,
+    timeRemaining: newState.timeRemaining,
+    totalTime: newState.totalTime || 25 * 60
+  };
+
+  // If we just entered focus mode or time changed significantly, update immediately
+  if (!wasInFocus && currentState.focusMode ||
+    Math.abs(currentState.timeRemaining - previousTimeRemaining) > 2) {
+    updatePageState();
+  } else {
+    // Otherwise just update the mug if we're in focus mode
+    if (currentState.focusMode) {
+      updateCoffeeMug();
+    }
+  }
+}
+
+// Listen for state updates from background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'updateState') {
+    console.log('FocusBrowse: Received state update', message.state);
+    updateState(message.state);
+    sendResponse({ success: true });
+  }
+});
 
 // Initialize
 if (document.readyState === 'loading') {
@@ -251,7 +351,14 @@ setInterval(() => {
   }
 }, 500);
 
-// Update coffee mug every second
+// Sync state from background every 5 seconds (fallback)
+setInterval(() => {
+  if (currentState.focusMode) {
+    checkCurrentUrl();
+  }
+}, 5000);
+
+// Local timer for smooth mug filling (syncs with background every 5 seconds)
 setInterval(() => {
   if (currentState.focusMode && !currentState.isBreak && currentState.timeRemaining > 0) {
     currentState.timeRemaining--;

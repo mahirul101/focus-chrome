@@ -104,10 +104,17 @@ function showNotification(title, message) {
 // Notify all tabs about state changes
 async function notifyAllTabs() {
   const tabs = await chrome.tabs.query({});
+  const stateWithTotalTime = {
+    ...state,
+    totalTime: state.isBreak ?
+      (state.completedPomodoros % 4 === 0 && state.completedPomodoros > 0 ?
+        state.longBreakDuration * 60 : 5 * 60) : 25 * 60
+  };
+
   tabs.forEach(tab => {
     chrome.tabs.sendMessage(tab.id, {
       action: 'updateState',
-      state: state
+      state: stateWithTotalTime
     }).catch(() => {
       // Ignore errors for tabs that can't receive messages
     });
