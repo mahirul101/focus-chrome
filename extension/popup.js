@@ -229,6 +229,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+document.getElementById("testNative").addEventListener("click", () => {
+  chrome.runtime.sendNativeMessage(
+    "com.focusbrowse.led",
+    { command: "focus" },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        console.error("Native error:", chrome.runtime.lastError.message);
+      } else {
+        console.log("Host response:", response);
+        alert("✅ Host says: " + JSON.stringify(response));
+      }
+    }
+  );
+});
+
 // Fallback initialization (in case DOMContentLoaded already fired)
 if (document.readyState === 'loading') {
   // DOM hasn't loaded yet
