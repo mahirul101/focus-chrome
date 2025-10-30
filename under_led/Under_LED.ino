@@ -3,36 +3,55 @@ int redPin = 9;
 int greenPin = 10;
 int bluePin = 11;
 
-volatile int mode = 1; // 0 = Flash, 1 = Breathe, 2 = Static
+volatile int mode = 0; // 0 = off, 1 = Breathe, 2 = Static, 3 = Flash, 4 = Redcolor
 
 void setup() {
   pinMode(ledPin, OUTPUT);
   pinMode(redPin, OUTPUT);
   pinMode(greenPin, OUTPUT);
   pinMode(bluePin, OUTPUT);
+  Serial.begin(9600);
 }
 
 void loop() {
+  if (Serial.available()) {
+    char incoming = Serial.read();
+    if (incoming >= '0' && incoming <= '4') {
+        mode = incoming - '0';
+    }
+  }
   switch (mode) {
     case 0:
-      flashLED();
-      //flashColors();
+      off();
       break;
     case 1:
       breatheLED();
       break;
     case 2:
-      staticColors();
+      staticColor();
+      break;
+    case 3:
+      flashLED();
+      break;
+    case 4:
+      redLED();
       break;
   }
 }
 
+void off() {
+  analogWrite(ledPin, 0);
+  analogWrite(redPin, 255);
+  analogWrite(greenPin, 255);
+  analogWrite(bluePin, 255);
+  delay(1000);
+}
 // Flashing single LED on pin 3
 void flashLED() {
   for (int i = 0; i < 5; i++) { // Flash 5 times
-    analogWrite(ledPin, 0);   // Full brightness (common anode logic)
+    analogWrite(ledPin, 255);   // Off
     delay(200);
-    analogWrite(ledPin, 255); // Off
+    analogWrite(ledPin, 0); // Full brightness (common anode logic)
     delay(200);
   }
 }
@@ -80,28 +99,18 @@ void breatheLED() {
 
 
 // Static RGB colors
-void staticColors() {
-  // Cyan
-  analogWrite(redPin, 255);
+void staticColor() {
+  analogWrite(ledPin, 255);
+  analogWrite(redPin, 0);
   analogWrite(greenPin, 0);
   analogWrite(bluePin, 0);
   delay(1000);
+}
 
-  // Magenta
+void redLED() {
+  analogWrite(ledPin, 0);
   analogWrite(redPin, 0);
   analogWrite(greenPin, 255);
-  analogWrite(bluePin, 0);
-  delay(1000);
-
-  // Yellow
-  analogWrite(redPin, 0);
-  analogWrite(greenPin, 0);
   analogWrite(bluePin, 255);
-  delay(1000);
-
-  // White
-  analogWrite(redPin, 0);
-  analogWrite(greenPin, 0);
-  analogWrite(bluePin, 0);
   delay(1000);
 }
