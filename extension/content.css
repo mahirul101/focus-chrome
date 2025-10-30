@@ -169,16 +169,6 @@ body.focusbrowse-dimmed::before {
   }
 }
 
-/* Mug hover effects */
-#focusbrowse-mug:hover .mug-svg {
-  transform: scale(1.1);
-  transition: transform 0.2s ease-out;
-}
-
-#focusbrowse-mug:hover .steam {
-  animation-duration: 1.5s;
-}
-
 /* Progress milestone effects */
 .coffee-fill.quarter-full {
   filter: brightness(1.1);
