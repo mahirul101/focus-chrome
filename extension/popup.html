@@ -2,321 +2,320 @@
 <html>
 
 <head>
-  <meta charset="UTF-8">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      width: 400px;
-      min-height: auto;
-      max-height: 600px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
-      padding: 0;
-      overflow-y: auto;
-    }
+        body {
+            width: 400px;
+            min-height: auto;
+            max-height: 600px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 0;
+            overflow-y: auto;
+        }
 
-    .container {
-      padding: 16px;
-    }
+        .container {
+            padding: 16px;
+        }
 
-    h1 {
-      font-size: 24px;
-      margin-bottom: 16px;
-      text-align: center;
-      font-weight: 600;
-    }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-weight: 600;
+        }
 
-    .timer-display {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
+        .timer-display {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
 
-    .timer {
-      font-size: 48px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      font-family: 'Courier New', monospace;
-    }
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
 
-    .session-info {
-      font-size: 14px;
-      opacity: 0.9;
-      margin-top: 10px;
-    }
+        .session-info {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
 
-    .controls {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
 
-    button {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      background: rgba(255, 255, 255, 0.9);
-      color: #667eea;
-    }
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+        }
 
-    button:hover {
-      background: #fff;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
+            button:hover {
+                background: #fff;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
 
-    button:active {
-      transform: translateY(0);
-    }
+            button:active {
+                transform: translateY(0);
+            }
 
-    button.stop {
-      background: rgba(255, 59, 48, 0.9);
-      color: #fff;
-    }
+            button.stop {
+                background: rgba(255, 59, 48, 0.9);
+                color: #fff;
+            }
 
-    button.stop:hover {
-      background: rgba(255, 59, 48, 1);
-    }
+                button.stop:hover {
+                    background: rgba(255, 59, 48, 1);
+                }
 
-    .section {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
 
-    .section h3 {
-      font-size: 14px;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      opacity: 0.9;
-    }
+            .section h3 {
+                font-size: 14px;
+                margin-bottom: 12px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                opacity: 0.9;
+            }
 
-    .input-group {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
 
-    input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #333;
-    }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
 
-    input[type="text"]::placeholder {
-      color: #999;
-    }
+            input[type="text"]::placeholder {
+                color: #999;
+            }
 
-    .add-btn {
-      padding: 10px 20px;
-      background: rgba(76, 175, 80, 0.9);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-    }
+        .add-btn {
+            padding: 10px 20px;
+            background: rgba(76, 175, 80, 0.9);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
 
-    .add-btn:hover {
-      background: rgba(76, 175, 80, 1);
-    }
+            .add-btn:hover {
+                background: rgba(76, 175, 80, 1);
+            }
 
-    .focus-list {
-      max-height: 200px;
-      overflow-y: auto;
-      margin-top: 10px;
-      min-height: 20px;
-    }
+        .focus-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            min-height: 20px;
+        }
 
-    .focus-list:empty::before {
-      content: 'No focus sites added yet';
-      display: block;
-      text-align: center;
-      padding: 8px;
-      opacity: 0.6;
-      font-size: 13px;
-    }
+            .focus-list:empty::before {
+                content: 'No focus sites added yet';
+                display: block;
+                text-align: center;
+                padding: 8px;
+                opacity: 0.6;
+                font-size: 13px;
+            }
 
-    .focus-item {
-      background: rgba(255, 255, 255, 0.15);
-      padding: 10px 12px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-      gap: 10px;
-    }
+        .focus-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            gap: 10px;
+        }
 
-    .focus-item:last-child {
-      margin-bottom: 0;
-    }
+            .focus-item:last-child {
+                margin-bottom: 0;
+            }
 
-    .focus-item span {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      margin-right: 10px;
-    }
+            .focus-item span {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-right: 10px;
+            }
 
-    .remove-btn {
-      background: rgba(255, 59, 48, 0.8);
-      color: #fff;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 11px;
-      flex-shrink: 0;
-    }
+        .remove-btn {
+            background: rgba(255, 59, 48, 0.8);
+            color: #fff;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
 
-    .remove-btn:hover {
-      background: rgba(255, 59, 48, 1);
-    }
+            .remove-btn:hover {
+                background: rgba(255, 59, 48, 1);
+            }
 
-    .settings-group {
-      margin-bottom: 8px;
-    }
+        .settings-group {
+            margin-bottom: 8px;
+        }
 
-    .settings-group label {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 6px;
-      opacity: 0.9;
-    }
+            .settings-group label {
+                display: block;
+                font-size: 13px;
+                margin-bottom: 6px;
+                opacity: 0.9;
+            }
 
-    select,
-    input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #333;
-    }
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
 
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
 
-    .stat-box {
-      background: rgba(255, 255, 255, 0.15);
-      padding: 12px;
-      border-radius: 8px;
-      text-align: center;
-    }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
 
-    .stat-value {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
 
-    .stat-label {
-      font-size: 11px;
-      opacity: 0.8;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+        .stat-label {
+            font-size: 11px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
 
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-    }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
 
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 3px;
-    }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.5);
-    }
-  </style>
+            ::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 255, 255, 0.5);
+            }
+    </style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>☕ FocusBrowse</h1>
-
-    <div class="timer-display">
-      <div class="timer" id="timer">25:00</div>
-      <div class="session-info" id="sessionInfo">Ready to start</div>
-      <div class="stats">
-        <div class="stat-box">
-          <div class="stat-value" id="completedSessions">0</div>
-          <div class="stat-label">Completed</div>
+    <div class="container">
+        <h1>☕ FocusBrowse</h1>
+        <div class="timer-display">
+            <div class="timer" id="timer">25:00</div>
+            <div class="session-info" id="sessionInfo">Ready to start</div>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="completedSessions">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="currentCycle">0/4</div>
+                    <div class="stat-label">Cycle</div>
+                </div>
+            </div>
         </div>
-        <div class="stat-box">
-          <div class="stat-value" id="currentCycle">0/4</div>
-          <div class="stat-label">Cycle</div>
+
+        <div class="controls">
+            <button id="startBtn">Start Focus</button>
+            <button id="stopBtn" class="stop" style="display: none;">Stop</button>
         </div>
-      </div>
+
+        <div class="section">
+            <h3>📚 Focus Sites</h3>
+            <div class="input-group">
+                <input type="text" id="urlInput" placeholder="e.g., google.com or docs.google.com">
+                <button class="add-btn" id="addUrl">Add</button>
+            </div>
+            <div class="focus-list" id="focusList"></div>
+        </div>
+
+        <div class="section">
+            <h3>⚙️ Settings</h3>
+            <div class="settings-group">
+                <label>Long Break Duration</label>
+                <select id="longBreak">
+                    <option value="15">15 minutes</option>
+                    <option value="20">20 minutes</option>
+                    <option value="25">25 minutes</option>
+                    <option value="30">30 minutes</option>
+                </select>
+            </div>
+            <div class="controls">
+                <button id="connect">Connect Lights</button>
+            </div>
+        </div>
     </div>
-
-    <div class="controls">
-      <button id="startBtn">Start Focus</button>
-      <button id="stopBtn" class="stop" style="display: none;">Stop</button>
-    </div>
-
-    <div class="section">
-      <h3>📚 Focus Sites</h3>
-      <div class="input-group">
-        <input type="text" id="urlInput" placeholder="e.g., google.com or docs.google.com">
-        <button class="add-btn" id="addUrl">Add</button>
-      </div>
-      <div class="focus-list" id="focusList"></div>
-    </div>
-
-    <div class="section">
-      <h3>⚙️ Settings</h3>
-      <div class="settings-group">
-        <label>Long Break Duration</label>
-        <select id="longBreak">
-          <option value="15">15 minutes</option>
-          <option value="20">20 minutes</option>
-          <option value="25">25 minutes</option>
-          <option value="30">30 minutes</option>
-        </select>
-      </div>
-    </div>
-
-    <button id="testNative">Test Host</button>
-  </div>
-
-  <script src="popup.js"></script>
+    <script src="popup.js"></script>
 </body>
 
 </html>
