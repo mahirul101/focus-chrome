@@ -9,6 +9,8 @@ let currentState = {
 let warningBar = null;
 let coffeeMug = null;
 
+console.log('FocusBrowse: Content script loaded on:', window.location.href);
+
 // Create warning bar for non-focus tabs
 function createWarningBar() {
   // Don't recreate if it already exists
@@ -79,9 +81,9 @@ function createCoffeeMug() {
   mugBody.setAttribute('y', '30');
   mugBody.setAttribute('width', '50');
   mugBody.setAttribute('height', '55');
-  mugBody.setAttribute('fill', '#fff');
-  mugBody.setAttribute('stroke', '#333');
-  mugBody.setAttribute('stroke-width', '3');
+  mugBody.setAttribute('fill', '#fefefe');
+  mugBody.setAttribute('stroke', '#000');
+  mugBody.setAttribute('stroke-width', '4');
   mugBody.setAttribute('rx', '5');
 
   // Coffee fill
@@ -297,6 +299,7 @@ async function checkCurrentUrl() {
     });
 
     if (response) {
+      console.log('FocusBrowse: checkUrl response:', response);
       updateState(response);
     }
   } catch (e) {
@@ -306,7 +309,6 @@ async function checkCurrentUrl() {
 
 // Update state and UI
 function updateState(newState) {
-  console.log('FocusBrowse: Updating state:', newState);
 
   // Sync all state properties with background script
   currentState = {
@@ -341,14 +343,15 @@ function updateTimer(timerData) {
 
 // Listen for state updates from background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+
   if (message.action === 'updateState') {
-    console.log('FocusBrowse: Received state update:', message.state);
     updateState(message.state);
     sendResponse({ success: true });
   } else if (message.action === 'updateTimer') {
-    console.log('FocusBrowse: Received timer update:', message.timer);
     updateTimer(message.timer);
     sendResponse({ success: true });
+  } else {
+    console.log('FocusBrowse: Unknown message action:', message.action);
   }
 });
 
@@ -359,31 +362,46 @@ if (document.readyState === 'loading') {
   checkCurrentUrl();
 }
 
-// Check URL on page navigation (less frequent)
+// Listen for navigation changes within the same tab
 let lastUrl = window.location.href;
-setInterval(() => {
+
+// Use navigation API events instead of polling
+window.addEventListener('popstate', () => {
   if (window.location.href !== lastUrl) {
     lastUrl = window.location.href;
-    console.log('FocusBrowse: URL changed, checking:', window.location.href);
-    checkCurrentUrl();
-  }
-}, 2000); // Reduced from 500ms to 2 seconds
-
-// Listen for page visibility changes to sync when tab becomes active
-document.addEventListener('visibilitychange', async () => {
-  if (!document.hidden && currentState.focusMode) {
-    // Tab became visible, sync with background
-    try {
-      const response = await chrome.runtime.sendMessage({
-        action: 'checkUrl',
-        url: window.location.href
-      });
-
-      if (response) {
-        updateState(response);
-      }
-    } catch (error) {
-      console.error('FocusBrowse: Visibility sync error:', error);
+    console.log('FocusBrowse: Navigation detected (popstate):', window.location.href);
+    if (currentState.focusMode) {
+      checkCurrentUrl();
     }
   }
 });
+
+// For single-page apps that use pushState/replaceState
+const originalPushState = history.pushState;
+const originalReplaceState = history.replaceState;
+
+history.pushState = function (...args) {
+  originalPushState.apply(history, args);
+  setTimeout(() => {
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      console.log('FocusBrowse: Navigation detected (pushState):', window.location.href);
+      if (currentState.focusMode) {
+        checkCurrentUrl();
+      }
+    }
+  }, 0);
+};
+
+history.replaceState = function (...args) {
+  originalReplaceState.apply(history, args);
+  setTimeout(() => {
+    if (window.location.href !== lastUrl) {
+      lastUrl = window.location.href;
+      console.log('FocusBrowse: Navigation detected (replaceState):', window.location.href);
+      if (currentState.focusMode) {
+        checkCurrentUrl();
+      }
+    }
+  }, 0);
+};

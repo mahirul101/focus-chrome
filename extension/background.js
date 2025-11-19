@@ -9,19 +9,23 @@ let state = {
 };
 
 let timerInterval = null;
+let stateLoaded = false;
 
 // Load state from storage
 async function loadState() {
   try {
     const data = await chrome.storage.local.get(['state', 'focusUrls']);
+    console.log('Background: Loaded state from storage:', data);
     if (data.state) {
       state = { ...state, ...data.state };
     }
     if (data.focusUrls) {
       state.focusUrls = data.focusUrls;
     }
+    stateLoaded = true;
   } catch (error) {
     console.error('Background: Error loading state:', error);
+    stateLoaded = true; // Set to true even on error to prevent infinite waiting
   }
 }
 
@@ -169,7 +173,6 @@ function isUrlFocused(url) {
     if (hostname === 'mahirul101.github.io') {
       return false;
     }
-    console.log('FocusBrowse: Checking URL:', hostname, 'against:', state.focusUrls);
 
     const isFocused = state.focusUrls.some(focusUrl => {
       // Remove protocol and www from focus URL
@@ -216,7 +219,7 @@ function isUrlFocused(url) {
 function sendModeToSerialPage(mode) {
   const serialTabUrl = "https://mahirul101.github.io/";
   const message = { mode: mode.toString() };
-  console.log(mode);
+  console.log(mode)
   // Find the tab and post the message
   chrome.tabs.query({}, (tabs) => {
     const serialTab = tabs.find(tab => tab.url && tab.url.startsWith(serialTabUrl));
@@ -232,20 +235,68 @@ function sendModeToSerialPage(mode) {
   });
 }
 
+// Inject content scripts into existing tabs (for extension reload)
+async function injectContentScriptsIntoExistingTabs() {
+  try {
+    const tabs = await chrome.tabs.query({});
+
+    for (const tab of tabs) {
+      // Skip chrome:// and extension pages
+      if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ['content.js']
+          });
+
+          await chrome.scripting.insertCSS({
+            target: { tabId: tab.id },
+            files: ['content.css']
+          });
+
+        } catch (error) {
+          console.log('Background: Could not inject into tab:', tab.url, error);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Background: Error injecting content scripts:', error);
+  }
+}
+
 // Handle messages from popup and content scripts
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.action === 'startFocus') {
+
     state.focusMode = true;
     // Only reset timer if it's completed (0) or this is the first time
     if (state.timeRemaining <= 0) {
       state.timeRemaining = 25 * 60;
       state.isBreak = false;
     }
+
     // Otherwise resume with current timeRemaining and isBreak state
     saveState();
     startTimer();
     notifyAllTabs();
-    sendModeToSerialPage(1);
+
+    // Check current active tab and send appropriate mode
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0] && tabs[0].url) {
+        const isFocused = isUrlFocused(tabs[0].url);
+        if (state.isBreak) {
+          sendModeToSerialPage(4); // Break mode
+        } else if (isFocused) {
+          sendModeToSerialPage(1); // Focused
+        } else {
+          sendModeToSerialPage(2); // Distracted
+        }
+      } else {
+        // Fallback to focused mode if can't determine tab
+        sendModeToSerialPage(1);
+      }
+    });
+
     sendResponse({ success: true });
 
   } else if (message.action === 'stopFocus') {
@@ -271,7 +322,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.action === 'checkUrl') {
     const isFocused = isUrlFocused(message.url);
 
-    if (!isFocused) {
+    // Only send mode to serial page if we're actually in focus mode
+    if (state.focusMode && !isFocused) {
       sendModeToSerialPage(2);
     }
 
@@ -318,8 +370,17 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Only check focus for the active tab
     chrome.tabs.query({ active: true, currentWindow: true }, (activeTabs) => {
       if (activeTabs[0] && activeTabs[0].id === tabId) {
-        // This is the active tab, check focus
+        // This is the active tab, check focus and send LED mode
         const isFocused = isUrlFocused(tab.url);
+
+        // Send appropriate LED mode based on focus state
+        if (state.isBreak) {
+          sendModeToSerialPage(4); // Break mode
+        } else if (isFocused) {
+          sendModeToSerialPage(1); // Focused
+        } else {
+          sendModeToSerialPage(2); // Distracted
+        }
 
         const stateWithTotalTime = {
           ...state,
@@ -393,7 +454,6 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
 // Service worker startup handler
 chrome.runtime.onStartup.addListener(() => {
-  console.log('Background: Service worker starting up');
   loadState().then(() => {
     console.log('Background: State loaded on startup');
   });
@@ -401,14 +461,14 @@ chrome.runtime.onStartup.addListener(() => {
 
 // Service worker installation handler
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Background: Extension installed/updated');
-  loadState().then(() => {
+  loadState().then(async () => {
     console.log('Background: State loaded on install/update');
+    // Inject content scripts into existing tabs after extension reload
+    await injectContentScriptsIntoExistingTabs();
   });
 });
 
 // Initialize immediately
-console.log('Background: Service worker initializing');
 loadState().then(() => {
   console.log('Background: Initialization complete');
   // Don't automatically restart timer - user should manually start focus mode
