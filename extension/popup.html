@@ -253,6 +253,30 @@
       background: rgba(255, 255, 255, 0.9);
       color: #333;
     }
+
+    .header-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .header-btn:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 
@@ -282,12 +306,20 @@
   </div>
 
   <div class="section">
-    <h3>📚 Focus Sites</h3>
+    <div class="section-header">
+      <h3>📚 Focus Sites</h3>
+      <button id="addCurrentSite" class="header-btn">
+        Add Current Site
+      </button>
+    </div>
+
     <div class="input-group">
       <input type="text" id="urlInput" placeholder="e.g., google.com or docs.google.com">
       <button class="add-btn" id="addUrl">Add</button>
     </div>
+
     <div class="focus-list" id="focusList"></div>
+  </div>
   </div>
 
   <div class="section">

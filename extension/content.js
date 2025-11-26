@@ -8,6 +8,10 @@ let currentState = {
 
 let warningBar = null;
 let coffeeMug = null;
+let isWarningHovered = false;
+let isMugHovered = false;
+let warningHideTimeout = null;
+let mugHideTimeout = null;
 
 console.log('FocusBrowse: Content script loaded on:', window.location.href);
 
@@ -15,6 +19,9 @@ console.log('FocusBrowse: Content script loaded on:', window.location.href);
 function createWarningBar() {
   // Don't recreate if it already exists
   if (warningBar && document.body.contains(warningBar)) {
+    // Don't update if user is hovering - preserve the hidden state
+    if (isWarningHovered) return;
+
     // Just update the class if needed
     const isBreak = currentState.isBreak;
     if (isBreak && !warningBar.classList.contains('break-time')) {
@@ -22,6 +29,13 @@ function createWarningBar() {
     } else if (!isBreak && warningBar.classList.contains('break-time')) {
       warningBar.classList.remove('break-time');
     }
+    // Don't update text content if hovered
+    const icon = isBreak ? '☕' : '⚠️';
+    const text = isBreak ? 'Break Time!' : 'Focus on study sites';
+    const iconEl = warningBar.querySelector('.warning-icon');
+    const textEl = warningBar.querySelector('.warning-text');
+    if (iconEl) iconEl.textContent = icon;
+    if (textEl) textEl.textContent = text;
     return;
   }
 
@@ -44,11 +58,37 @@ function createWarningBar() {
   `;
 
   document.body.appendChild(warningBar);
+
+  // Add hover listeners after appending to DOM
+  warningBar.addEventListener('mouseenter', () => {
+    console.log('Warning bar: Mouse entered');
+    if (warningHideTimeout) {
+      clearTimeout(warningHideTimeout);
+    }
+    isWarningHovered = true;
+    warningBar.style.transition = 'opacity 0.3s ease';
+    warningBar.style.opacity = '0';
+  });
+
+  warningBar.addEventListener('mouseleave', () => {
+    console.log('Warning bar: Mouse left');
+    // Keep it hidden for a short time to prevent flickering
+    warningHideTimeout = setTimeout(() => {
+      isWarningHovered = false;
+      warningBar.style.transition = 'opacity 0.3s ease';
+      warningBar.style.opacity = '1';
+    }, 300); // 300ms delay
+  });
 }
 
 // Remove warning bar
 function removeWarningBar() {
   if (warningBar) {
+    if (warningHideTimeout) {
+      clearTimeout(warningHideTimeout);
+      warningHideTimeout = null;
+    }
+    isWarningHovered = false;
     warningBar.remove();
     warningBar = null;
   }
@@ -143,11 +183,37 @@ function createCoffeeMug() {
 
   coffeeMug.appendChild(svg);
   document.body.appendChild(coffeeMug);
+
+  // Add hover listeners after appending to DOM
+  coffeeMug.addEventListener('mouseenter', () => {
+    console.log('Coffee mug: Mouse entered');
+    if (mugHideTimeout) {
+      clearTimeout(mugHideTimeout);
+    }
+    isMugHovered = true;
+    coffeeMug.style.transition = 'opacity 0.3s ease';
+    coffeeMug.style.opacity = '0';
+  });
+
+  coffeeMug.addEventListener('mouseleave', () => {
+    console.log('Coffee mug: Mouse left');
+    // Keep it hidden for a short time to prevent flickering
+    mugHideTimeout = setTimeout(() => {
+      isMugHovered = false;
+      coffeeMug.style.transition = 'opacity 0.3s ease';
+      coffeeMug.style.opacity = '1';
+    }, 300); // 300ms delay
+  });
 }
 
 // Remove coffee mug
 function removeCoffeeMug() {
   if (coffeeMug) {
+    if (mugHideTimeout) {
+      clearTimeout(mugHideTimeout);
+      mugHideTimeout = null;
+    }
+    isMugHovered = false;
     coffeeMug.remove();
     coffeeMug = null;
   }
@@ -156,6 +222,9 @@ function removeCoffeeMug() {
 // Update coffee mug fill
 function updateCoffeeMug() {
   if (!coffeeMug) return;
+
+  // Don't update if user is hovering - preserve the hidden state
+  if (isMugHovered) return;
 
   const progress = currentState.totalTime > 0 ?
     1 - (currentState.timeRemaining / currentState.totalTime) : 0;
@@ -336,6 +405,7 @@ function updateTimer(timerData) {
   currentState.isBreak = timerData.isBreak;
 
   // Only update coffee mug progress (no expensive DOM changes)
+  // updateCoffeeMug already checks isMugHovered internally
   if (currentState.focusMode) {
     updateCoffeeMug();
   }

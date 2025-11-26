@@ -136,6 +136,57 @@ document.getElementById('addUrl').addEventListener('click', async () => {
   }
 });
 
+// Add current site to focus list
+document.getElementById('addCurrentSite').addEventListener('click', async () => {
+  console.log('Popup: Add Current Site clicked');
+
+  try {
+    // Get the active tab
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs || !tabs[0] || !tabs[0].url) {
+      console.error('Popup: No active tab URL found');
+      return;
+    }
+
+    let url = tabs[0].url;
+
+    // Clean up URL - same logic as manual input
+    url = url
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./, '')
+      .split('/')[0]
+      .split('?')[0]
+      .toLowerCase()
+      .trim();
+
+    if (!url) {
+      console.error('Popup: URL extraction failed');
+      return;
+    }
+
+    if (!state.focusUrls.includes(url)) {
+      console.log('Popup: Adding current site:', url);
+      state.focusUrls.push(url);
+
+      await chrome.storage.local.set({ focusUrls: state.focusUrls });
+
+      // Tell background script to reload
+      try {
+        await chrome.runtime.sendMessage({ action: 'reloadUrls' });
+      } catch (error) {
+        console.error('Popup: Failed to notify background:', error);
+      }
+
+      // Refresh UI
+      await loadFocusUrls();
+    } else {
+      console.log('Popup: Current site already exists:', url);
+    }
+  } catch (error) {
+    console.error('Popup: Error adding current site:', error);
+  }
+});
+
 // Allow adding URL with Enter key
 document.getElementById('urlInput').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
